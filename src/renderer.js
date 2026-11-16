@@ -41,9 +41,12 @@ function rounded(ctx, x, y, w, h, r) {
 }
 
 export class PianoRenderer {
-  constructor(canvas) {
+  constructor(canvas, { width, height, pixelRatio, observe = true, transparent = false } = {}) {
+    this.fixedSize = width && height ? { width, height } : null;
+    this.pixelRatio = pixelRatio;
+    this.transparent = transparent;
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d', { alpha: false });
+    this.ctx = canvas.getContext('2d', { alpha: transparent });
     this.options = { ...DEFAULTS };
     this.notes = [];
     this.starts = [];
@@ -51,7 +54,7 @@ export class PianoRenderer {
     this.maxHold = 0;
     this.keys = new Map();
     this.reducedMotion = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => this.resize()) : null;
+    this.resizeObserver = observe && !this.fixedSize && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => this.resize()) : null;
     this.resizeObserver?.observe(canvas);
     this.resize();
   }
@@ -76,10 +79,10 @@ export class PianoRenderer {
 
   resize() {
     if (!this.canvas || !this.ctx) return;
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = this.fixedSize || this.canvas.getBoundingClientRect();
     this.width = Math.max(1, rect.width);
     this.height = Math.max(1, rect.height);
-    this.dpr = Math.min(2, globalThis.devicePixelRatio || 1);
+    this.dpr = this.pixelRatio ?? Math.min(2, globalThis.devicePixelRatio || 1);
     const w = Math.round(this.width * this.dpr), h = Math.round(this.height * this.dpr);
     if (this.canvas.width !== w || this.canvas.height !== h) {
       this.canvas.width = w;
@@ -129,20 +132,22 @@ export class PianoRenderer {
 
   draw(time = 0) {
     if (!this.ctx || !this.width || !this.height) return;
-    this.time = Number.isFinite(time) ? Math.max(0, time) : 0;
+    this.time = Number.isFinite(time) ? time : 0;
     const ctx = this.ctx, w = this.width, h = this.height;
     const palette = PALETTES[this.options.background] || PALETTES.midnight;
     const light = this.options.background === 'ivory';
     const right = rgb(this.options.rightColor), left = rgb(this.options.leftColor);
     const colors = { right, left };
-    const bg = ctx.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, palette.top); bg.addColorStop(1, palette.bottom);
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
-    // A quiet pool of light connects the glass controls and the instrument.
-    const halo = ctx.createRadialGradient(w * .5, h * .55, 0, w * .5, h * .55, w * .65);
-    halo.addColorStop(0, rgba(blend(right, left, .6), light ? .035 : .055));
-    halo.addColorStop(1, rgba(left, 0));
-    ctx.fillStyle = halo; ctx.fillRect(0, 0, w, h);
+    if (this.transparent) {
+      ctx.clearRect(0,0,w,h);
+    } else {
+      // The exported frame uses the same unbroken scene as the surrounding app.
+      const base = { midnight:'#10151c', ivory:'#e6ebef', dusk:'#201727' }[this.options.background] || '#10151c';
+      ctx.fillStyle=base;ctx.fillRect(0,0,w,h);
+      const ambient=ctx.createRadialGradient(w*.72,0,0,w*.72,0,w*.85);
+      ambient.addColorStop(0,light?'rgba(255,255,255,.7)':this.options.background==='dusk'?'rgba(141,77,123,.18)':'rgba(74,113,146,.13)');
+      ambient.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=ambient;ctx.fillRect(0,0,w,h);
+    }
     const lookAhead = this.options.fallSpeed;
     const pps = Math.max(1, this.strike - 30) / lookAhead;
     const t = this.time;

@@ -10,12 +10,14 @@
     "test": "node --test tests/*.test.js"
   },
   "dependencies": {
+    "@mediabunny/aac-encoder": "^1.66.0",
     "@tonejs/midi": "^2.0.28",
     "glisse": "0.6.0",
     "lucide-react": "^0.468.0",
+    "mediabunny": "^1.66.0",
+    "midi-file": "^1.2.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "midi-file": "^1.2.4"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "vite": "^7.0.0"

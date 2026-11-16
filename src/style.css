@@ -20,5 +20,7 @@ header{position:absolute;left:0;right:0;top:0;z-index:3;display:flex;align-items
 @media(max-height:650px) and (min-width:701px){header{padding-top:16px}.stage{top:72px;bottom:145px}.transport{bottom:14px;padding:13px 20px 10px!important}.panel{top:72px;bottom:145px}.settings{gap:18px}.panel-head{margin-bottom:16px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 /* Keep Glisse's measured capsule and its fixed-width label slots identical. */
-.settings .lg-segmented{justify-self:start;--lg-tab-width:80px}
+.settings .lg-segmented{justify-self:center;--lg-tab-width:80px}
 .settings [aria-label="Keyboard range"]{--lg-tab-width:120px}
+
+@media(max-height:500px){.app{min-height:320px}header{padding-top:12px;padding-bottom:12px}.stage{top:66px;bottom:137px}.transport{bottom:10px;padding-top:11px!important;padding-bottom:8px!important}.panel{top:66px;bottom:140px;padding-top:16px!important}.panel-head{margin-bottom:18px}.toast{bottom:140px}}
